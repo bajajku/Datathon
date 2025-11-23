@@ -398,8 +398,9 @@ class MultiSceneProcessor:
             if context.math_objects:
                 imports_needed.add("import numpy as np")
         
-        # Create the combined class
-        combined_code = f'''{"".join(sorted(imports_needed))}
+        # Create the combined class with proper import formatting
+        imports_str = '\n'.join(sorted(imports_needed))
+        combined_code = f'''{imports_str}
 
 class CombinedVideo(Scene):
     """
@@ -462,18 +463,57 @@ class CombinedVideo(Scene):
         while construct_lines and not construct_lines[-1].strip():
             construct_lines.pop()
         
+        # Normalize indentation by removing the base level
+        if construct_lines:
+            # Find minimum indentation level
+            min_indent = float('inf')
+            for line in construct_lines:
+                if line.strip():
+                    current_indent = len(line) - len(line.lstrip())
+                    if current_indent < min_indent:
+                        min_indent = current_indent
+            
+            if min_indent == float('inf'):
+                min_indent = 0
+            
+            # Remove base indentation
+            normalized_lines = []
+            for line in construct_lines:
+                if line.strip():
+                    normalized_lines.append(line[min_indent:] if min_indent > 0 else line)
+                else:
+                    normalized_lines.append(line)
+            
+            return '\n'.join(normalized_lines)
+        
         return '\n'.join(construct_lines)
     
     def _indent_code(self, code: str, additional_levels: int) -> str:
-        """Add additional indentation to code block."""
+        """Add additional indentation to code block, normalizing first."""
         lines = code.split('\n')
-        indent = '    ' * additional_levels
         
-        indented_lines = []
+        # First, normalize the existing indentation by finding the minimum indent
+        min_indent = float('inf')
         for line in lines:
-            if line.strip():  # Only indent non-empty lines
-                indented_lines.append(indent + line)
+            if line.strip():  # Non-empty line
+                current_indent = len(line) - len(line.lstrip())
+                if current_indent < min_indent:
+                    min_indent = current_indent
+        
+        if min_indent == float('inf'):
+            min_indent = 0
+        
+        # Remove the base indentation and add the new indentation
+        target_indent = '    ' * additional_levels
+        indented_lines = []
+        
+        for line in lines:
+            if line.strip():  # Non-empty line
+                # Remove base indentation and add target indentation
+                normalized_line = line[min_indent:] if min_indent > 0 else line
+                indented_lines.append(target_indent + normalized_line)
             else:
+                # Keep empty lines as-is
                 indented_lines.append(line)
         
         return '\n'.join(indented_lines)

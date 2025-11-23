@@ -35,7 +35,7 @@ else:
 class InputProcessor:
     """Processes various input types and converts them to structured prompts."""
     
-    def __init__(self, api_key: Optional[str] = None, model_name: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: Optional[str] = None, model_name: str = "gemini-2.5-pro"):
         """
         Initialize the InputProcessor.
         
